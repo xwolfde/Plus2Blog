@@ -94,15 +94,16 @@ sub blogArticles {
 sub sendArticle {
 	my $this = shift;
 
-	print STDERR "Send to blog:\n";
-	print STDERR "$this->{'title'}\n";
-	print STDERR "guid: $this->{'guid'}\n";
+        utf8::encode($this->{'description'});
+        utf8::encode($this->{'title'});
 
+	if ($DEBUG) {
+		print STDERR "Send to blog:\n";
+		print STDERR "$this->{'title'}\n";
+		print STDERR "guid: $this->{'guid'}\n";
+	}
 
-	utf8::encode($this->{'description'});
-	utf8::encode($this->{'title'});
 	my $xmlrpc = XMLRPC::Lite->proxy($CONFIG->{'url_blogxmlrpc'});
-
 	my $call = $xmlrpc->call('metaWeblog.newPost',
 		$CONFIG->{'blog_id'}, 
 		$CONFIG->{'blog_username'},
@@ -115,7 +116,7 @@ sub sendArticle {
 			
 		},
 		1);
-
+	return;
 }
 ###############################################################################
 sub storePubindex {
