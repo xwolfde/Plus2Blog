@@ -28,7 +28,7 @@ my $CONFIG = {
 		 # Set to 0, if also reshares
 	"show_attachments"	=> 1,
 		# Add Attachment as part of the article
-	"cssclass_attachments"	=> "attachment",
+	"cssclass_attachments"	=> "attachment clearfix",
 		# CSS class for all attachments
 	"article_minlength"	=> 200,
 		# Minimum number of chars a g+ article should have if it
@@ -44,11 +44,11 @@ my $CONFIG = {
 	"show_replies"		=> 1,
 		# if there are already replys, a link will be added telling about the replys
 		# and where to comment
-	"replies_notice"	=> "<p class=\"replies\">Es gibt bereits #replies.totalItems# Antworten bei G+. <a href=\"#url#\">Folgen Sie der Diskussion</a> dort.</p>",
+	"replies_notice"	=> "<p class=\"replies\">There are already #replies.totalItems# replies at G+. <a href=\"#url#\">Please follow the discussion there</a>.</p>",
 	"show_source"		=> 1,
 		# If a notice of the source will be displayed; This wont be displayed, if the current item
 		# contains replies, which will also target the source.
-	"source_notice"		=> "<p class=\"notice\">Dieser Artikel wurde <a href=\"#url#\">erstmalig auf G+ publiziert</a>.</p>",	
+	"source_notice"		=> "<p class=\"notice\">This article was <a href=\"#url#\">published at G+ first</a>.</p>",	
 	"pubindex_file"		=> 'pubindex.store',
 		# Storefile with all articles that was already send to the blog before
 
@@ -210,7 +210,7 @@ sub formatdesc {
 		if ((scalar(@att)==1) && ($att[0]->{'objectType'} eq 'article')) {
 			# verlinkung mit Website; Ein Bild ist aber nicht vorhanden.
 			$addclass .= " textlink";
-			$attachment .= "<a href=\"$att[0]->{'url'}\">$att[0]->{'displayName'}</a>";
+			$atext .= "<a href=\"$att[0]->{'url'}\">$att[0]->{'displayName'}</a>";
 			if ($CONFIG->{'show_attachment_linkcontent'}) {
                                 $atext .= "<span class=\"$CONFIG->{'cssclass_linkcontent'}\">$att[0]->{'content'}</span>";
                         }
