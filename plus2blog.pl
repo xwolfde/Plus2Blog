@@ -28,6 +28,8 @@ my $CONFIG = {
 		 # Set to 0, if also reshares
 	"show_attachments"	=> 1,
 		# Add Attachment as part of the article
+	"clip_title"		=> 1,
+		# clips the title-string from the text
 	"cssclass_attachments"	=> "attachment clearfix",
 		# CSS class for all attachments
 	"article_minlength"	=> 300,
@@ -181,6 +183,11 @@ sub make_blogarticle {
 sub formatdesc {
 	my $text = shift;
 	my $attachment = shift;
+	my $cliptitle = shift;
+
+	if ($CONFIG->{'clip_title'}) {
+		$text =~ s/^$cliptitle[\.;:!\?\s]+//gi;
+	}
 	my $res;
 	if ((not $attachment)  || (not $CONFIG->{'show_attachments'})) {
 		if ($CONFIG->{'cssclass_articleborder'}) {
@@ -279,8 +286,9 @@ sub formatdesc {
 sub formattitle {
 	my $text = shift;
 	$text =~ s/\((.*)$//gi;
-	$text =~ s/[\.;:!]\s+(.*)//gi;
-		
+	$text =~ s/[\.;:]\s+(.*)//gi;
+        $text =~ s/([\?!])\s+(.*)/$1/gi;
+		# we want to leave these signs in the title, but clip after them
 	return $text;
 }
 #################
