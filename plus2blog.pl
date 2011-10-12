@@ -30,7 +30,7 @@ my $CONFIG = {
 		# Add Attachment as part of the article
 	"cssclass_attachments"	=> "attachment clearfix",
 		# CSS class for all attachments
-	"article_minlength"	=> 200,
+	"article_minlength"	=> 300,
 		# Minimum number of chars a g+ article should have if it
 		# gets posted as blogarticle
 	"cssclass_articleborder" => "",
