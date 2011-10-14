@@ -13,7 +13,7 @@ my $CONFIG = {
 		# Get yourself an api-key at http://developers.google.com/+/api/oauth#apikey
 	"userid"		=> 'your-user-id',
 		# Google userid, from which you want to get the stream
-	"url_blogxmlrpc"	=> 'https://your-blog-url/xmlrpc.php',
+	"url_blogxmlrpc"	=> 'your-blog-url/xmlrpc.php',
 		# URL to the XML RPC Api of the blog
 	"blog_username"		=> 'your-blog-username',
 	"blog_password"		=> 'your-blog-password',
@@ -86,19 +86,23 @@ exit;
 sub Init {
 	my $help;
 	my $printconfig;
+	my $pconf;
+
         my $options = GetOptions(
-		"userid=i" => \$CONFIG->{'userid'},
-                "apikey=s" => \$CONFIG->{'api_key'},
-                "xmlrpc=s" => \$CONFIG->{'url_blogxmlrpc'},
-		"blog-user=s"	=> \$CONFIG->{'blog_username'},
-		"blog-pwd=s"   	=> \$CONFIG->{'blog_password'},
-		"configfile=s"	=> \$CONFIG->{'configfile'},
-		"indexfile=s"	=> \$CONFIG->{'pubindex_file'},
+		"userid=i" 	=> \$pconf->{'userid'},
+                "apikey=s" 	=> \$pconf->{'api_key'},
+                "xmlrpc=s" 	=> \$pconf->{'url_blogxmlrpc'},
+		"blog-user=s"	=> \$pconf->{'blog_username'},
+		"blog-pwd=s"   	=> \$pconf->{'blog_password'},
+		"configfile=s"	=> \$pconf->{'configfile'},
+		"indexfile=s"	=> \$pconf->{'pubindex_file'},
 		"printconfig"	=> \$printconfig,
-                "debug" => \$DEBUG,
+                "debug" 	=> \$DEBUG,
 		"checkonly"	=> \$CHECKONLY,
-		"help"	=> \$help,
+		"help"		=> \$help,
         );
+	$CONFIG->{'configfile'} = $pconf->{'configfile'} if ($pconf->{'configfile'});
+
 	if (-r $CONFIG->{'configfile'}) {
                 my ($name, $val);
                 open(f1,"<$CONFIG->{'configfile'}");
@@ -113,6 +117,15 @@ sub Init {
                         }
                 }
         }
+	# command line parameters will overrule all, even also config file parameters
+	$CONFIG->{'userid'} = $pconf->{'userid'} if ($pconf->{'userid'});
+	$CONFIG->{'api_key'} = $pconf->{'api_key'} if ($pconf->{'api_key'});
+	$CONFIG->{'url_blogxmlrpc'} = $pconf->{'url_blogxmlrpc'} if ($pconf->{'url_blogxmlrpc'});
+	$CONFIG->{'blog_username'} = $pconf->{'blog_username'} if ($pconf->{'blog_username'});
+	$CONFIG->{'blog_password'} = $pconf->{'blog_password'} if ($pconf->{'blog_password'});
+	$CONFIG->{'pubindex_file'} = $pconf->{'pubindex_file'} if ($pconf->{'pubindex_file'});
+
+
 	if ($printconfig) {
 		print "$0 Config\n";
 		my $key;
@@ -120,7 +133,9 @@ sub Init {
 			printf "\t%-25s: %s\n",$key, $CONFIG->{$key};
 		}
 	}
-	
+	if ($CONFIG->{'url_blogxmlrpc'} !~ /^http/i) {
+		$CONFIG->{'url_blogxmlrpc'} = "http://".$CONFIG->{'url_blogxmlrpc'};
+	}	
 	if (($help) || ($CONFIG->{'userid'} !~ /^\d+$/i)) {
 		if ($CONFIG->{'userid'} !~ /^\d+$/i) {
 			print STDERR "Error: Invalid userid ($CONFIG->{'userid'}).\n\n";
@@ -128,13 +143,22 @@ sub Init {
 		print STDERR "Usage:\n";
 		print STDERR "$0 [--userid=i --apikey=s --xmlrpc=s --blog-user=s --blog-pwd=s --configfile=s --indexfile=s --debug]\n";
 		print STDERR "\t--userid=i:     A google plus userid \n";
+		print STDERR "\t                Current default/config: $CONFIG->{'userid'}\n";
 		print STDERR "\t--apikey=s:     An api-key for this script. Get yourself an api-key at http://developers.google.com/+/api/oauth#apikey \n";
+                print STDERR "\t                Current default/config: $CONFIG->{'api_key'}\n";
 		print STDERR "\t--xmlrpc=s:     URL to the XML-RPC API of the blog in which all messages are streamed to.\n";
+		print STDERR "\t                Current default/config: $CONFIG->{'url_blogxmlrpc'}\n";
+
 		print STDERR "\t--blog-user=s:  Username for the blog\n";
+		print STDERR "\t                Current default/config: $CONFIG->{'blog_username'}\n";
 		print STDERR "\t--blog-pwd=s:   Password for the blog\n";
+		print STDERR "\t                Current default/config: $CONFIG->{'blog_password'}\n";
+
 		print STDERR "\t--configfile=s: Configuration file for all configuration variables; Overrides all parameters and defaults \n";
-		print STDERR "\t                Readable tabseparated file\n";
+		print STDERR "\t                Current default/config: $CONFIG->{'configfile'}\n";
+
 		print STDERR "\t--indexfile=s:  Index of previous blog entries\n";
+		print STDERR "\t                Current default/config: $CONFIG->{'pubindex_file'}\n";
 		print STDERR "\t--debug:        Sets debug mode on\n";
 		print STDERR "\t--checkonly:	Do not push new entries to blog, just read the g+ stream\n";
 		print STDERR "\t--help:         This help\n";

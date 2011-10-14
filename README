@@ -26,6 +26,25 @@ Usage:
 	--debug:        Sets debug mode on
 	--checkonly:	Do not push new entries to blog, just read the g+ stream
 
+In common use you will call this script using crontab. E.g. with an crontab-entry like this:
+   10 8-23 * * * /myhome/plus2blog/plus2blog.pl --configfile=/myhome/plus2blog/myconfig.txt >/dev/null 2>&1
+
+Its also possible to push data from more as one g+ stream to a single blog or 
+to push data from one g+ stream to several blogs.
+In this case you should use several indexfiles for each stream and blog:
+The indexfiles will register each article that was already send to a blog before
+and will not send it again. Therfor you will habe to use two or more
+indexfiles for each target or source stream.
+
+Example: One g+ userid 12345678 as source for an article stream and two blogs as targets:
+
+  ./plus2blog.pl --userid=12345678 --xmlrpc=blog1.example.org/xmlrpc.php --blog-user=blog1user --blog-pwd=something
+  ./plus2blog.pl --userid=12345678 --xmlrpc=blog2.example.org/xmlrpc.php --blog-user=blog2user --blog-pwd=something
+
+if there is a file named plus2blog.txt as a configfile, its variables will be used too.
+Parameters about command line will override all paraneters within the script an within configfiles.
+
+
 
 Configuration:
 ==============
