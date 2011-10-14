@@ -1,0 +1,14 @@
+api_key		Your-API-Key
+userid		Google Userid to get the stream from
+url_blogxmlrpc	http://your-blog-url/xmlrpc.php
+blog_username	Blog Username
+blog_password	Blog Password
+blog_id		1
+	# Blog ID, mostly 1
+blog_defaultcategory	Allgemeines
+	# Default category
+article_minlength	400
+	# minimum length an article should have to get posted
+replies_notice	<p class=\"replies\">Es gibt bereits Antworten bei G+. <a href=\"#url#\">Folgen Sie der Diskussion</a> dort.</p>
+source_notice	<p class=\"notice\">Dieser Artikel wurde <a href=\"#url#\">erstmalig auf G+ publiziert</a>.</p>
+

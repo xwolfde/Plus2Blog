@@ -1,47 +1,54 @@
 Plus2Blog
 
-Version: 1.0
+Version: 1.1
 Author : Wolfgang Wiese ("xwolf"), http://www.xwolf.de
 GitHub : http://github.com/xwolfde/Plus2Blog
 
 Description:
+============
+
 This script reads in the activity stream of a Google+ user and sends it to
 a given blog using XML-RPC.
 
 
+Usage:
+======
+
+./plus2blog.pl [--userid=i --apikey=s --xmlrpc=s --blog-user=s --blog-pwd=s --configfile=s --indexfile=s --debug]
+	--userid=i:     A google plus userid 
+	--apikey=s:     An api-key for this script. Get yourself an api-key at http://developers.google.com/+/api/oauth#apikey 
+	--xmlrpc=s:     URL to the XML-RPC API of the blog in which all messages are streamed to.
+	--blog-user=s:  Username for the blog
+	--blog-pwd=s:   Password for the blog
+	--configfile=s: Configuration file for all configuration variables; Overrides all parameters and defaults 
+	                Readable tabseparated file
+	--indexfile=s:  Index of previous blog entries
+	--debug:        Sets debug mode on
+	--checkonly:	Do not push new entries to blog, just read the g+ stream
+
+
 Configuration:
-Please change the following settings at the top of plus2blog.pl :
+==============
 
-my $CONFIG = {
-...
-        "api_key"               => 'your-api-key',
-                # API-Key for this script;
-                # Get yourself an api-key at http://developers.google.com/+/api/oauth#apikey
-        "userid"                => 'your-user-id',
-                # Google userid, from which you want to get the stream
-        "url_blogxmlrpc"        => 'http://your-blog-url/xmlrpc.php',
-                # URL to the XML RPC Api of the blog
-        "blog_username"         => 'your-blog-username',
-        "blog_password"         => 'your-blog-password',
-	"blog_id"               => 1,
-		# Blog-Id, mostly this is 1 if you dont use a multiuser-blogging-system
-	"blog_defaultcategory"	=> 'MyGooglePlusStream',
-		# The default category articles should get on the blog
+Please change the following settings at the top of plus2blog.pl or set values
+using parameters or by setting them into a config file (see sample-config.txt).
 
-...
-};
 
 
 Required Perl-Modules:
+======================
+
  LWP::UserAgent
  JSON
  XMLRPC::Lite
-
+ Getopt::Long
 
 
 License: 
-	Creative Commons Attribution 3.0 Unported License
-         http://creativecommons.org/licenses/by/3.0/
+========
+
+Creative Commons Attribution 3.0 Unported License
+http://creativecommons.org/licenses/by/3.0/
 
 Copyright (c) 2011 Wolfgang Wiese
 

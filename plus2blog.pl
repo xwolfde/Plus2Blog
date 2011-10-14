@@ -5,6 +5,7 @@ use LWP::UserAgent;
 use JSON;
 use Storable;
 use XMLRPC::Lite;
+use Getopt::Long;
 ###############################################################################
 my $CONFIG = {
         "api_key"               => 'your-api-key',
@@ -53,28 +54,94 @@ my $CONFIG = {
 	"source_notice"		=> "<p class=\"notice\">This article was <a href=\"#url#\">published at G+ first</a>.</p>",	
 	"pubindex_file"		=> 'pubindex.store',
 		# Storefile with all articles that was already send to the blog before
-
+	"configfile"		=> 'plus2blog.txt',
+		# configfile to store own config
 
 
 };
 my $DEBUG = 0;
+my $CHECKONLY = 0;
 ###############################################################################
+# Main
+###############################################################################
+Init();
 
-
+if ($CONFIG->{'userid'} !~ /^\d+$/i) {
+	print STDERR "No valid userid\n";
+	exit;
+}
 my $data = get_activities();
-
-
 if ($data->{'status'}==1) {
 	my $artikel = make_list($data->{'data'}->{'items'});
 	blogArticles($artikel);
 } else {
-	print STDERR "Could not get a datastream from userid $CONFIG->{'userid'}\n";
+	print "Could not get a datastream from userid $CONFIG->{'userid'}\n";
 	if ($data->{'error'}) {
-		print STDERR "Errormessage: $data->{'error'}\n";
+		print "Errormessage: $data->{'error'}\n";
 	}	
 }
 
 exit;
+###############################################################################
+sub Init {
+	my $help;
+	my $printconfig;
+        my $options = GetOptions(
+		"userid=i" => \$CONFIG->{'userid'},
+                "apikey=s" => \$CONFIG->{'api_key'},
+                "xmlrpc=s" => \$CONFIG->{'url_blogxmlrpc'},
+		"blog-user=s"	=> \$CONFIG->{'blog_username'},
+		"blog-pwd=s"   	=> \$CONFIG->{'blog_password'},
+		"configfile=s"	=> \$CONFIG->{'configfile'},
+		"indexfile=s"	=> \$CONFIG->{'pubindex_file'},
+		"printconfig"	=> \$printconfig,
+                "debug" => \$DEBUG,
+		"checkonly"	=> \$CHECKONLY,
+		"help"	=> \$help,
+        );
+	if (-r $CONFIG->{'configfile'}) {
+                my ($name, $val);
+                open(f1,"<$CONFIG->{'configfile'}");
+                while(<f1>) {
+                        chomp($_);
+                        next if ($_ =~ /^\s*#/i);
+                        next if ($_ =~ /^\s*$/i);
+                        $_ =~ s/^\s*//gi;
+                        ($name, $val) = split(/\t+/,$_,2);
+                        if (defined($CONFIG->{$name})) {
+                                $CONFIG->{$name} = $val;
+                        }
+                }
+        }
+	if ($printconfig) {
+		print "$0 Config\n";
+		my $key;
+		foreach $key (sort keys %{$CONFIG}) {
+			printf "\t%-25s: %s\n",$key, $CONFIG->{$key};
+		}
+	}
+	
+	if (($help) || ($CONFIG->{'userid'} !~ /^\d+$/i)) {
+		if ($CONFIG->{'userid'} !~ /^\d+$/i) {
+			print STDERR "Error: Invalid userid ($CONFIG->{'userid'}).\n\n";
+		}
+		print STDERR "Usage:\n";
+		print STDERR "$0 [--userid=i --apikey=s --xmlrpc=s --blog-user=s --blog-pwd=s --configfile=s --indexfile=s --debug]\n";
+		print STDERR "\t--userid=i:     A google plus userid \n";
+		print STDERR "\t--apikey=s:     An api-key for this script. Get yourself an api-key at http://developers.google.com/+/api/oauth#apikey \n";
+		print STDERR "\t--xmlrpc=s:     URL to the XML-RPC API of the blog in which all messages are streamed to.\n";
+		print STDERR "\t--blog-user=s:  Username for the blog\n";
+		print STDERR "\t--blog-pwd=s:   Password for the blog\n";
+		print STDERR "\t--configfile=s: Configuration file for all configuration variables; Overrides all parameters and defaults \n";
+		print STDERR "\t                Readable tabseparated file\n";
+		print STDERR "\t--indexfile=s:  Index of previous blog entries\n";
+		print STDERR "\t--debug:        Sets debug mode on\n";
+		print STDERR "\t--checkonly:	Do not push new entries to blog, just read the g+ stream\n";
+		print STDERR "\t--help:         This help\n";
+		exit;
+	}
+
+}
 ###############################################################################
 sub blogArticles {
 	my $blogartikel = shift;
@@ -86,8 +153,10 @@ sub blogArticles {
 			print "Article \"$blogartikel->{$key}->{'title'}\"\n  already send at  $index->{$blogartikel->{$key}->{'guid'}}->{'send'} \n" if ($DEBUG);
 		} else {
 			sendArticle($blogartikel->{$key});
-			$index->{$blogartikel->{$key}->{'guid'}}->{'send'} = localtime(time);
-			$index->{$blogartikel->{$key}->{'guid'}}->{'title'} = $blogartikel->{$key}->{'title'};
+			if (not $CHECKONLY) {
+				$index->{$blogartikel->{$key}->{'guid'}}->{'send'} = localtime(time);
+				$index->{$blogartikel->{$key}->{'guid'}}->{'title'} = $blogartikel->{$key}->{'title'};
+			}
 		}
 	}
 	storePubindex($index);
@@ -104,7 +173,10 @@ sub sendArticle {
 		print STDERR "$this->{'title'}\n";
 		print STDERR "guid: $this->{'guid'}\n";
 	}
-
+	if ($CHECKONLY) {
+		print "Article \n  \"$this->{'title'}\", id  $this->{'guid'} \n not send to blog due of parameter --checkonly\n";
+		return;
+	}
 	my $xmlrpc = XMLRPC::Lite->proxy($CONFIG->{'url_blogxmlrpc'});
 	my $call = $xmlrpc->call('metaWeblog.newPost',
 		$CONFIG->{'blog_id'}, 
@@ -162,7 +234,7 @@ sub make_blogarticle {
 		$item->{'object'}->{'originalContent'} = $item->{'object'}->{'content'};
 	}
 	if ((length($item->{'object'}->{'originalContent'}) < $CONFIG->{'article_minlength'}) && ($CONFIG->{'article_minlength'} > 0)) {
-		print STDERR "Article too short\n" if ($DEBUG>2);
+		print STDERR "Article \"$res->{'title'}\" too short\n" if ($DEBUG);
 		return;
 	} else {
 	        $res->{'description'} = formatdesc($item->{'object'}->{'content'},$item->{'object'}->{'attachments'});
@@ -180,6 +252,7 @@ sub make_blogarticle {
 
 	return $res;
 }
+###############################################################################
 sub formatdesc {
 	my $text = shift;
 	my $attachment = shift;
@@ -296,8 +369,15 @@ sub get_activities {
 	my $collection = shift || "public";
 	my $res;
 
+	if  (not $CONFIG->{'userid'}) {
+	 	$res->{'data'} = "Missing userid";
+		$res->{'status'} = 0;
+		return $res;
+	}
 	my $url =  $CONFIG->{'url_googleapi'}.$CONFIG->{'uri_activitylist'}.$CONFIG->{'userid'}."/activities/".$collection;
-	$url .= "?key=".$CONFIG->{'api_key'};
+	if ($CONFIG->{'api_key'}) {
+		$url .= "?key=".$CONFIG->{'api_key'};
+	}
 
 
 	if ($CONFIG->{'fieldfilter'}) {
